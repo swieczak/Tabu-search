@@ -1,0 +1,658 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 12.3' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[     27284,        650]
+NotebookOptionsPosition[     26929,        636]
+NotebookOutlinePosition[     27328,        652]
+CellTagsIndexPosition[     27285,        649]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"f", " ", "-", " ", 
+      RowBox[{"given", " ", "function"}]}], " ", "|", " ", "x1"}], ",", "x2", 
+    ",", "y1", ",", 
+    RowBox[{
+     RowBox[{"y2", " ", "-", " ", 
+      RowBox[{
+      "restrictons", " ", "of", " ", "the", " ", "given", " ", "function"}]}],
+      " ", "|", " ", 
+     RowBox[{"rad", " ", "-", " ", 
+      RowBox[{"''", 
+       RowBox[{"radius", "''"}], " ", "of", " ", "searched", " ", "area", " ",
+        "per", " ", "point"}]}]}]}], "*)"}], "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{
+    RowBox[{"sizePath", " ", "-", " ", 
+     RowBox[{
+     "amount", " ", "of", " ", "steps", " ", "for", " ", "the", " ", 
+      "algorithm", " ", "to", " ", "be", " ", "taken"}]}], " ", "|", " ", 
+    RowBox[{"sizeAround", " ", "-", " ", 
+     RowBox[{
+     "amount", " ", "of", " ", "randomly", " ", "chosen", " ", "points", " ", 
+      "in", " ", "the", " ", "searched", " ", "area"}]}]}], "*)"}], 
+  "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"tabuSearch", "[", 
+     RowBox[{
+     "f_", ",", "x1_", ",", "x2_", ",", "y1_", ",", "y2_", ",", "rad_", ",", 
+      "sizePath_", ",", "sizeAround_"}], "]"}], ":=", 
+    RowBox[{"Module", "[", 
+     RowBox[{
+      RowBox[{"{", " ", 
+       RowBox[{
+        RowBox[{"xa", "=", "x1"}], ",", " ", 
+        RowBox[{"xb", "=", "x2"}], ",", " ", 
+        RowBox[{"ya", "=", "y1"}], ",", " ", 
+        RowBox[{"yb", "=", "y2"}], ",", " ", 
+        RowBox[{"r", "=", "rad"}], ",", "path", ",", " ", "around", ",", 
+        "tabu", ",", "activeMinimum", ",", " ", "tmpMinimum", ",", " ", 
+        "inTabu", ",", " ", "tmp", ",", " ", "limiter", ",", " ", 
+        "ultimateMinimum"}], "}"}], ",", "\[IndentingNewLine]", 
+      RowBox[{"(*", 
+       RowBox[{
+       "array", " ", "that", " ", "saves", " ", "the", " ", "points", " ", 
+        "chosen", " ", "by", " ", "algorithm"}], "*)"}], 
+      "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"path", " ", "=", " ", 
+        RowBox[{"CreateDataStructure", "[", "\"\<DynamicArray\>\"", "]"}]}], 
+       ";", "\[IndentingNewLine]", 
+       RowBox[{"(*", 
+        RowBox[{
+        "array", " ", "that", " ", "takes", " ", "the", " ", "random", " ", 
+         "points", " ", "around", " ", "the", " ", "chosen", " ", "point", 
+         " ", "restricted", " ", "by", " ", "value", " ", "r"}], "*)"}], 
+       "\[IndentingNewLine]", 
+       RowBox[{"around", " ", "=", " ", 
+        RowBox[{"Table", "[", 
+         RowBox[{"0", ",", 
+          RowBox[{"{", 
+           RowBox[{"i", ",", "1", ",", "sizeAround"}], "}"}]}], "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"(*", 
+        RowBox[{
+        "replaces", " ", "the", " ", "r", " ", "in", " ", "case", " ", "the", 
+         " ", "alghoritm", " ", "would", " ", "like", " ", "to", " ", 
+         "escape", " ", "function", " ", "limits"}], "*)"}], 
+       "\[IndentingNewLine]", 
+       RowBox[{"limiter", " ", "=", " ", 
+        RowBox[{"Table", "[", 
+         RowBox[{"0", ",", 
+          RowBox[{"{", 
+           RowBox[{"i", ",", "1", ",", "4"}], "}"}]}], "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"(*", 
+        RowBox[{
+        "array", " ", "that", " ", "saves", " ", "the", " ", "tabu", " ", 
+         "points"}], "*)"}], "\[IndentingNewLine]", 
+       RowBox[{"tabu", "=", " ", 
+        RowBox[{"CreateDataStructure", "[", "\"\<DynamicArray\>\"", "]"}]}], 
+       ";", "\[IndentingNewLine]", 
+       RowBox[{"(*", 
+        RowBox[{
+        "plot", " ", "of", " ", "the", " ", "given", " ", "function", " ", 
+         "f"}], "*)"}], "\[IndentingNewLine]", 
+       RowBox[{"plott", " ", "=", " ", 
+        RowBox[{"ContourPlot", "[", 
+         RowBox[{"f", ",", 
+          RowBox[{"{", 
+           RowBox[{"x", ",", "x1", ",", "x2"}], "}"}], ",", 
+          RowBox[{"{", 
+           RowBox[{"y", ",", "y1", ",", "y2"}], "}"}]}], "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"(*", 
+        RowBox[{
+        "first", " ", "point", " ", "is", " ", "chosen", " ", "randomly"}], 
+        "*)"}], "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"around", "[", 
+         RowBox[{"[", "1", "]"}], "]"}], "=", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"Random", "[", 
+           RowBox[{"Real", ",", 
+            RowBox[{"{", 
+             RowBox[{"xa", ",", "xb"}], "}"}]}], "]"}], ",", 
+          RowBox[{"Random", "[", 
+           RowBox[{"Real", ",", 
+            RowBox[{"{", 
+             RowBox[{"ya", ",", "yb"}], "}"}]}], "]"}]}], "}"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"path", "[", 
+        RowBox[{"\"\<Append\>\"", ",", 
+         RowBox[{"around", "[", 
+          RowBox[{"[", "1", "]"}], "]"}]}], "]"}], ";", "\[IndentingNewLine]", 
+       RowBox[{"tmpMinimum", " ", "=", " ", 
+        RowBox[{"around", "[", 
+         RowBox[{"[", "1", "]"}], "]"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"activeMinimum", " ", "=", " ", "tmpMinimum"}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"ultimateMinimum", " ", "=", " ", "tmpMinimum"}], ";", 
+       "\[IndentingNewLine]", "\[IndentingNewLine]", 
+       RowBox[{"(*", 
+        RowBox[{
+        "loop", " ", "that", " ", "determines", " ", "how", " ", "long", " ", 
+         "should", " ", "the", " ", "algorithm", " ", "compute"}], "*)"}], 
+       "\[IndentingNewLine]", 
+       RowBox[{"For", "[", 
+        RowBox[{
+         RowBox[{"k", "=", "2"}], ",", 
+         RowBox[{"k", "<=", "sizePath"}], ",", 
+         RowBox[{"k", "++"}], ",", "\[IndentingNewLine]", 
+         RowBox[{"(*", 
+          RowBox[{
+          "picking", " ", "random", " ", "points", " ", "with", " ", 
+           "respect", " ", "to", " ", "the", " ", "limiter"}], "*)"}], 
+         "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{"For", "[", 
+           RowBox[{
+            RowBox[{"i", "=", "2"}], ",", 
+            RowBox[{"i", "\[LessEqual]", "sizeAround"}], ",", 
+            RowBox[{"i", "++"}], ",", "\[IndentingNewLine]", 
+            RowBox[{
+             RowBox[{"If", "[", 
+              RowBox[{
+               RowBox[{
+                RowBox[{
+                 RowBox[{"around", "[", 
+                  RowBox[{"[", 
+                   RowBox[{"1", ",", "1"}], "]"}], "]"}], "-", "r"}], "<", 
+                "xa"}], ",", " ", 
+               RowBox[{
+                RowBox[{"limiter", "[", 
+                 RowBox[{"[", "1", "]"}], "]"}], "=", 
+                RowBox[{"Abs", "[", 
+                 RowBox[{"xa", "-", 
+                  RowBox[{"around", "[", 
+                   RowBox[{"[", 
+                    RowBox[{"1", ",", "1"}], "]"}], "]"}]}], "]"}]}], ",", 
+               RowBox[{
+                RowBox[{"limiter", "[", 
+                 RowBox[{"[", "1", "]"}], "]"}], " ", "=", " ", "r"}]}], 
+              "]"}], ";", "\[IndentingNewLine]", 
+             RowBox[{"If", "[", 
+              RowBox[{
+               RowBox[{
+                RowBox[{
+                 RowBox[{"around", "[", 
+                  RowBox[{"[", 
+                   RowBox[{"1", ",", "1"}], "]"}], "]"}], "+", "r"}], ">", 
+                "xb"}], ",", " ", 
+               RowBox[{
+                RowBox[{"limiter", "[", 
+                 RowBox[{"[", "2", "]"}], "]"}], "=", 
+                RowBox[{"Abs", "[", 
+                 RowBox[{"xb", "-", 
+                  RowBox[{"around", "[", 
+                   RowBox[{"[", 
+                    RowBox[{"1", ",", "1"}], "]"}], "]"}]}], "]"}]}], ",", 
+               RowBox[{
+                RowBox[{"limiter", "[", 
+                 RowBox[{"[", "2", "]"}], "]"}], " ", "=", " ", "r"}]}], 
+              "]"}], ";", "\[IndentingNewLine]", 
+             RowBox[{"If", "[", 
+              RowBox[{
+               RowBox[{
+                RowBox[{
+                 RowBox[{"around", "[", 
+                  RowBox[{"[", 
+                   RowBox[{"1", ",", "2"}], "]"}], "]"}], "-", "r"}], "<", 
+                "ya"}], ",", " ", 
+               RowBox[{
+                RowBox[{"limiter", "[", 
+                 RowBox[{"[", "3", "]"}], "]"}], "=", 
+                RowBox[{"Abs", "[", 
+                 RowBox[{"ya", "-", 
+                  RowBox[{"around", "[", 
+                   RowBox[{"[", 
+                    RowBox[{"1", ",", "2"}], "]"}], "]"}]}], "]"}]}], ",", 
+               RowBox[{
+                RowBox[{"limiter", "[", 
+                 RowBox[{"[", "3", "]"}], "]"}], " ", "=", " ", "r"}]}], 
+              "]"}], ";", "\[IndentingNewLine]", 
+             RowBox[{"If", "[", 
+              RowBox[{
+               RowBox[{
+                RowBox[{
+                 RowBox[{"around", "[", 
+                  RowBox[{"[", 
+                   RowBox[{"1", ",", "2"}], "]"}], "]"}], "+", "r"}], ">", 
+                "yb"}], ",", " ", 
+               RowBox[{
+                RowBox[{"limiter", "[", 
+                 RowBox[{"[", "4", "]"}], "]"}], "=", 
+                RowBox[{"Abs", "[", 
+                 RowBox[{"yb", "-", 
+                  RowBox[{"around", "[", 
+                   RowBox[{"[", 
+                    RowBox[{"1", ",", "2"}], "]"}], "]"}]}], "]"}]}], ",", 
+               RowBox[{
+                RowBox[{"limiter", "[", 
+                 RowBox[{"[", "4", "]"}], "]"}], " ", "=", " ", "r"}]}], 
+              "]"}], ";", "\[IndentingNewLine]", "\[IndentingNewLine]", 
+             RowBox[{
+              RowBox[{"around", "[", 
+               RowBox[{"[", "i", "]"}], "]"}], "=", " ", 
+              RowBox[{"{", 
+               RowBox[{
+                RowBox[{"Random", "[", 
+                 RowBox[{"Real", ",", 
+                  RowBox[{"{", 
+                   RowBox[{
+                    RowBox[{
+                    RowBox[{"around", "[", 
+                    RowBox[{"[", 
+                    RowBox[{"1", ",", "1"}], "]"}], "]"}], "-", 
+                    RowBox[{"limiter", "[", 
+                    RowBox[{"[", "1", "]"}], "]"}]}], ",", 
+                    RowBox[{
+                    RowBox[{"around", "[", 
+                    RowBox[{"[", 
+                    RowBox[{"1", ",", "1"}], "]"}], "]"}], "+", 
+                    RowBox[{"limiter", "[", 
+                    RowBox[{"[", "2", "]"}], "]"}]}]}], "}"}]}], "]"}], ",", 
+                RowBox[{"Random", "[", 
+                 RowBox[{"Real", ",", 
+                  RowBox[{"{", 
+                   RowBox[{
+                    RowBox[{
+                    RowBox[{"around", "[", 
+                    RowBox[{"[", 
+                    RowBox[{"1", ",", "2"}], "]"}], "]"}], "-", 
+                    RowBox[{"limiter", "[", 
+                    RowBox[{"[", "3", "]"}], "]"}]}], ",", 
+                    RowBox[{
+                    RowBox[{"around", "[", 
+                    RowBox[{"[", 
+                    RowBox[{"1", ",", "2"}], "]"}], "]"}], "+", 
+                    RowBox[{"limiter", "[", 
+                    RowBox[{"[", "4", "]"}], "]"}]}]}], "}"}]}], "]"}]}], 
+               "}"}]}], ";"}]}], "]"}], ";", "\[IndentingNewLine]", 
+          RowBox[{"(*", 
+           RowBox[{
+           "end", " ", "of", " ", "picking", " ", "random", " ", "points", 
+            " ", "with", " ", "respect", " ", "to", " ", "the", " ", 
+            "limiter"}], "*)"}], "\[IndentingNewLine]", "\[IndentingNewLine]", 
+          RowBox[{"(*", 
+           RowBox[{
+           "loop", " ", "that", " ", "validates", " ", "the", " ", "random", 
+            " ", "points"}], "*)"}], "\[IndentingNewLine]", 
+          RowBox[{"For", "[", 
+           RowBox[{
+            RowBox[{"i", "=", "2"}], ",", 
+            RowBox[{"i", "\[LessEqual]", "sizeAround"}], ",", 
+            RowBox[{"i", "++"}], ",", "\[IndentingNewLine]", 
+            RowBox[{"(*", 
+             RowBox[{
+             "checking", " ", "if", " ", "a", " ", "point", " ", "is", " ", 
+              "in", " ", "the", " ", "tabu", " ", "list"}], "*)"}], 
+            "\[IndentingNewLine]", 
+            RowBox[{
+             RowBox[{"inTabu", " ", "=", " ", "False"}], ";", 
+             "\[IndentingNewLine]", 
+             RowBox[{"For", "[", 
+              RowBox[{
+               RowBox[{"j", "=", "1"}], ",", 
+               RowBox[{"j", "<", 
+                RowBox[{"tabu", "[", "\"\<Length\>\"", "]"}]}], ",", 
+               RowBox[{"j", "++"}], ",", "\[IndentingNewLine]", 
+               RowBox[{
+                RowBox[{"tmp", " ", "=", " ", 
+                 RowBox[{"tabu", "[", 
+                  RowBox[{"\"\<Part\>\"", ",", "j"}], "]"}]}], ";", 
+                "\[IndentingNewLine]", 
+                RowBox[{"If", "[", " ", 
+                 RowBox[{
+                  RowBox[{
+                   RowBox[{
+                    RowBox[{"around", "[", 
+                    RowBox[{"[", 
+                    RowBox[{"i", ",", "1"}], "]"}], "]"}], "<", 
+                    RowBox[{
+                    RowBox[{"tmp", "[", 
+                    RowBox[{"[", "1", "]"}], "]"}], "+", "r"}]}], " ", "&&", 
+                   " ", 
+                   RowBox[{
+                    RowBox[{"around", "[", 
+                    RowBox[{"[", 
+                    RowBox[{"i", ",", "1"}], "]"}], "]"}], ">", 
+                    RowBox[{
+                    RowBox[{"tmp", "[", 
+                    RowBox[{"[", "1", "]"}], "]"}], " ", "-", "r"}]}], " ", "&&",
+                    " ", 
+                   RowBox[{
+                    RowBox[{"around", "[", 
+                    RowBox[{"[", 
+                    RowBox[{"i", ",", "2"}], "]"}], "]"}], "<", 
+                    RowBox[{
+                    RowBox[{"tmp", "[", 
+                    RowBox[{"[", "2", "]"}], "]"}], "+", "r"}]}], " ", "&&", 
+                   RowBox[{
+                    RowBox[{"around", "[", 
+                    RowBox[{"[", 
+                    RowBox[{"i", ",", "2"}], "]"}], "]"}], ">", 
+                    RowBox[{
+                    RowBox[{"tmp", "[", 
+                    RowBox[{"[", "2", "]"}], "]"}], " ", "-", "r"}]}]}], " ", 
+                  ",", 
+                  RowBox[{"inTabu", " ", "=", " ", "True"}]}], "]"}], ";"}]}],
+               "]"}], ";", "\[IndentingNewLine]", "\[IndentingNewLine]", 
+             "\[IndentingNewLine]", 
+             RowBox[{"(*", 
+              RowBox[{
+               RowBox[{"if", " ", "not"}], ",", " ", 
+               RowBox[{
+               "we", " ", "check", " ", "if", " ", "the", " ", "point", " ", 
+                "takes", " ", "a", " ", "lower", " ", "value", " ", "than", 
+                " ", "the", " ", "previous", " ", "one"}]}], "*)"}], 
+             "\[IndentingNewLine]", 
+             RowBox[{"If", "[", 
+              RowBox[{
+               RowBox[{
+                RowBox[{"inTabu", "\[Equal]", "False"}], " ", "&&", 
+                RowBox[{
+                 RowBox[{"(", 
+                  RowBox[{"f", "/.", 
+                   RowBox[{"{", 
+                    RowBox[{
+                    RowBox[{"x", "\[Rule]", 
+                    RowBox[{"tmpMinimum", "[", 
+                    RowBox[{"[", "1", "]"}], "]"}]}], ",", 
+                    RowBox[{"y", "\[Rule]", 
+                    RowBox[{"tmpMinimum", "[", 
+                    RowBox[{"[", "2", "]"}], "]"}]}]}], "}"}]}], ")"}], " ", 
+                 ">", " ", 
+                 RowBox[{"(", 
+                  RowBox[{"f", "/.", 
+                   RowBox[{"{", 
+                    RowBox[{
+                    RowBox[{"x", "\[Rule]", 
+                    RowBox[{"around", "[", 
+                    RowBox[{"[", 
+                    RowBox[{"i", ",", "1"}], "]"}], "]"}]}], ",", 
+                    RowBox[{"y", "->", 
+                    RowBox[{"around", "[", 
+                    RowBox[{"[", 
+                    RowBox[{"i", ",", "2"}], "]"}], "]"}]}]}], "}"}]}], 
+                  ")"}]}]}], ",", 
+               RowBox[{
+                RowBox[{"tmpMinimum", " ", "=", " ", 
+                 RowBox[{"around", "[", 
+                  RowBox[{"[", "i", "]"}], "]"}]}], ";"}]}], "]"}], ";", 
+             "\[IndentingNewLine]", "\[IndentingNewLine]", 
+             RowBox[{"(*", 
+              RowBox[{
+              "if", " ", "the", " ", "point", " ", "has", " ", "the", " ", 
+               "lowest", " ", "value", " ", "in", " ", "this", " ", "run", 
+               " ", "it", " ", "saves", " ", "it", " ", "to", " ", "an", " ", 
+               "activeMinimum"}], "*)"}], "\[IndentingNewLine]", 
+             RowBox[{"If", "[", 
+              RowBox[{
+               RowBox[{
+                RowBox[{"inTabu", "\[Equal]", "False"}], " ", "&&", 
+                RowBox[{
+                 RowBox[{"(", 
+                  RowBox[{"f", "/.", 
+                   RowBox[{"{", 
+                    RowBox[{
+                    RowBox[{"x", "\[Rule]", 
+                    RowBox[{"activeMinimum", "[", 
+                    RowBox[{"[", "1", "]"}], "]"}]}], ",", 
+                    RowBox[{"y", "->", 
+                    RowBox[{"activeMinimum", "[", 
+                    RowBox[{"[", "2", "]"}], "]"}]}]}], "}"}]}], ")"}], " ", 
+                 ">", " ", 
+                 RowBox[{"(", 
+                  RowBox[{"f", "/.", 
+                   RowBox[{"{", 
+                    RowBox[{
+                    RowBox[{"x", "\[Rule]", 
+                    RowBox[{"around", "[", 
+                    RowBox[{"[", 
+                    RowBox[{"i", ",", "1"}], "]"}], "]"}]}], ",", 
+                    RowBox[{"y", "->", 
+                    RowBox[{"around", "[", 
+                    RowBox[{"[", 
+                    RowBox[{"i", ",", "2"}], "]"}], "]"}]}]}], "}"}]}], 
+                  ")"}]}]}], ",", 
+               RowBox[{
+                RowBox[{"activeMinimum", " ", "=", " ", 
+                 RowBox[{"around", "[", 
+                  RowBox[{"[", "i", "]"}], "]"}]}], ";"}]}], " ", "]"}], 
+             ";"}]}], "\[IndentingNewLine]", "]"}], ";", 
+          "\[IndentingNewLine]", 
+          RowBox[{"(*", 
+           RowBox[{
+           "end", " ", "of", " ", "the", " ", "loop", " ", "that", " ", 
+            "validates", " ", "the", " ", "random", " ", "points"}], "*)"}], 
+          "\[IndentingNewLine]", "\[IndentingNewLine]", 
+          RowBox[{"(*", 
+           RowBox[{
+           "appending", " ", "chosen", " ", "point", " ", "to", " ", "a", " ",
+             "tabu", " ", "list"}], "*)"}], "\[IndentingNewLine]", 
+          RowBox[{"tabu", "[", 
+           RowBox[{"\"\<Append\>\"", ",", "tmpMinimum"}], "]"}], ";", 
+          "\[IndentingNewLine]", "\[IndentingNewLine]", 
+          RowBox[{"(*", 
+           RowBox[{
+            RowBox[{"Diversification", " ", "-", " ", 
+             RowBox[{
+             "if", " ", "the", " ", "algorithm", " ", "cannot", " ", "find", 
+              " ", "a", " ", "lower", " ", "value", " ", "in", " ", "given", 
+              " ", "area", " ", "it", " ", "chooses", " ", "new", " ", 
+              "starting", " ", "point", " ", "somewhere", " ", "on", " ", 
+              "the", " ", "graph"}]}], ",", " ", 
+            RowBox[{"if", " ", "it", " ", "can", " ", "it", " ", "goes", " ", 
+             RowBox[{"on", ".", " ", "Also"}], " ", "saves", " ", "the", " ", 
+             "lowest", " ", "point", " ", "of", " ", "all", " ", "runs"}]}], 
+           "*)"}], "\[IndentingNewLine]", 
+          RowBox[{"If", "[", 
+           RowBox[{
+            RowBox[{"tmpMinimum", " ", "\[Equal]", " ", 
+             RowBox[{"around", "[", 
+              RowBox[{"[", "1", "]"}], "]"}]}], ",", 
+            RowBox[{
+             RowBox[{"path", "[", 
+              RowBox[{"\"\<Append\>\"", ",", 
+               RowBox[{"{", 
+                RowBox[{
+                 RowBox[{"Random", "[", 
+                  RowBox[{"Real", ",", 
+                   RowBox[{"{", 
+                    RowBox[{"xa", ",", "xb"}], "}"}]}], "]"}], ",", 
+                 RowBox[{"Random", "[", 
+                  RowBox[{"Real", ",", 
+                   RowBox[{"{", 
+                    RowBox[{"ya", ",", "yb"}], "}"}]}], "]"}]}], "}"}]}], 
+              "]"}], ";", "\[IndentingNewLine]", " ", 
+             RowBox[{"If", "[", 
+              RowBox[{
+               RowBox[{
+                RowBox[{"(", 
+                 RowBox[{"f", "/.", 
+                  RowBox[{"{", 
+                   RowBox[{
+                    RowBox[{"x", "\[Rule]", 
+                    RowBox[{"ultimateMinimum", "[", 
+                    RowBox[{"[", "1", "]"}], "]"}]}], ",", 
+                    RowBox[{"y", "\[Rule]", 
+                    RowBox[{"ultimateMinimum", "[", 
+                    RowBox[{"[", "2", "]"}], "]"}]}]}], "}"}]}], ")"}], " ", 
+                ">", " ", 
+                RowBox[{"(", 
+                 RowBox[{"f", "/.", 
+                  RowBox[{"{", 
+                   RowBox[{
+                    RowBox[{"x", "\[Rule]", 
+                    RowBox[{"activeMinimum", "[", 
+                    RowBox[{"[", "1", "]"}], "]"}]}], ",", 
+                    RowBox[{"y", "->", 
+                    RowBox[{"activeMinimum", "[", 
+                    RowBox[{"[", "2", "]"}], "]"}]}]}], "}"}]}], ")"}]}], ",", 
+               RowBox[{
+                RowBox[{"ultimateMinimum", "=", "activeMinimum"}], ";", 
+                RowBox[{"activeMinimum", "=", 
+                 RowBox[{"path", "[", 
+                  RowBox[{"\"\<Part\>\"", ",", "k"}], "]"}]}], ";"}]}], 
+              "]"}]}], ",", 
+            RowBox[{"path", "[", 
+             RowBox[{"\"\<Append\>\"", ",", "tmpMinimum"}], "]"}]}], "]"}], 
+          ";", "\[IndentingNewLine]", "\[IndentingNewLine]", 
+          RowBox[{"(*", 
+           RowBox[{"restarts", " ", "auxiliary", " ", "values"}], "*)"}], 
+          "\[IndentingNewLine]", 
+          RowBox[{"tmpMinimum", "=", 
+           RowBox[{"path", "[", 
+            RowBox[{"\"\<Part\>\"", ",", "k"}], "]"}]}], ";", 
+          "\[IndentingNewLine]", "\[IndentingNewLine]", 
+          RowBox[{
+           RowBox[{"around", "[", 
+            RowBox[{"[", "1", "]"}], "]"}], " ", "=", " ", 
+           RowBox[{"path", "[", 
+            RowBox[{"\"\<Part\>\"", ",", "k"}], "]"}]}], ";"}]}], 
+        "\[IndentingNewLine]", "\[IndentingNewLine]", "]"}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"(*", 
+        RowBox[{
+        "end", " ", "of", " ", "the", " ", "loop", " ", "that", " ", 
+         "determines", " ", "how", " ", "long", " ", "should", " ", "the", 
+         " ", "algorithm", " ", "compute"}], "*)"}], "\[IndentingNewLine]", 
+       "\[IndentingNewLine]", 
+       RowBox[{"(*", 
+        RowBox[{
+        "assigning", " ", "algorithm", " ", "output", " ", "to", " ", 
+         "present", " ", "it", " ", "on", " ", "plot"}], "*)"}], 
+       "\[IndentingNewLine]", 
+       RowBox[{"p", "=", 
+        RowBox[{"Table", "[", 
+         RowBox[{"0", ",", 
+          RowBox[{"{", 
+           RowBox[{"i", ",", "1", ",", "sizePath"}], "}"}]}], "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"For", "[", 
+        RowBox[{
+         RowBox[{"i", " ", "=", " ", "1"}], ",", 
+         RowBox[{"i", "<=", "sizePath"}], ",", 
+         RowBox[{"i", "++"}], ",", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"p", " ", "[", 
+            RowBox[{"[", "i", "]"}], "]"}], " ", "=", " ", 
+           RowBox[{"path", "[", 
+            RowBox[{"\"\<Part\>\"", ",", "i"}], "]"}]}], ";"}]}], 
+        "\[IndentingNewLine]", "]"}], ";", "\[IndentingNewLine]", 
+       RowBox[{"Print", "[", 
+        RowBox[{
+        "\"\<the approximate minimum point of given function is\>\"", ",", 
+         "ultimateMinimum", ",", "\"\< and equals \>\"", ",", 
+         RowBox[{"f", "/.", 
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{"x", "\[Rule]", 
+             RowBox[{"ultimateMinimum", "[", 
+              RowBox[{"[", "1", "]"}], "]"}]}], ",", 
+            RowBox[{"y", "\[Rule]", 
+             RowBox[{"ultimateMinimum", "[", 
+              RowBox[{"[", "2", "]"}], "]"}]}]}], "}"}]}]}], "]"}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"points", "=", 
+        RowBox[{"Table", "[", 
+         RowBox[{
+          RowBox[{"Show", "[", 
+           RowBox[{"plott", ",", 
+            RowBox[{"ListLinePlot", "[", 
+             RowBox[{
+              RowBox[{"Take", "[", 
+               RowBox[{"p", ",", "aa"}], "]"}], ",", 
+              RowBox[{"Mesh", "\[Rule]", "All"}], ",", 
+              RowBox[{"PlotStyle", "\[Rule]", 
+               RowBox[{"{", 
+                RowBox[{
+                 RowBox[{"PointSize", "[", "0.02", "]"}], ",", "Red"}], 
+                "}"}]}]}], "]"}]}], "]"}], ",", 
+          RowBox[{"{", 
+           RowBox[{"aa", ",", "1", ",", "sizePath"}], "}"}]}], "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"ListAnimate", "[", "points", "]"}]}]}], "\[IndentingNewLine]",
+      "]"}]}], "\[IndentingNewLine]", "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"Clear", "[", "x", "]"}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"g1", "=", 
+     RowBox[{
+      RowBox[{"x", "^", "2"}], "+", 
+      RowBox[{"y", "^", "2"}]}]}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{"tabuSearch", "[", 
+    RowBox[{"g1", ",", 
+     RowBox[{"-", "5"}], ",", "5", ",", 
+     RowBox[{"-", "5"}], ",", "5", ",", "0.5", ",", "30", ",", "500"}], "]"}],
+    "\[IndentingNewLine]", "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"g3", "=", 
+     RowBox[{
+      SuperscriptBox[
+       RowBox[{"Sin", "[", "x", "]"}], "3"], "+", 
+      SuperscriptBox[
+       RowBox[{"Cos", "[", "y", "]"}], "2"]}]}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{"tabuSearch", "[", 
+    RowBox[{"g3", ",", 
+     RowBox[{"-", "10"}], ",", "10", ",", 
+     RowBox[{"-", "10"}], ",", "10", ",", "1", ",", "40", ",", "500"}], "]"}],
+    "\[IndentingNewLine]", "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"g4", "=", 
+     RowBox[{
+      SuperscriptBox[
+       RowBox[{"Sin", "[", "x", "]"}], "4"], "+", 
+      SuperscriptBox[
+       RowBox[{"Cos", "[", "y", "]"}], "3"], " ", "+", " ", 
+      RowBox[{"x", "^", "2"}]}]}], " ", ";"}], "\[IndentingNewLine]", 
+   RowBox[{"tabuSearch", "[", 
+    RowBox[{"g4", ",", 
+     RowBox[{"-", "10"}], ",", "10", ",", 
+     RowBox[{"-", "10"}], ",", "10", ",", "1", ",", "40", ",", "500"}], 
+    "]"}]}]}]], "Input",
+ CellChangeTimes->{{3.852272241392784*^9, 3.8522722686289425`*^9}, {
+  3.8522724965185337`*^9, 
+  3.8522724970960894`*^9}},ExpressionUUID->"c90540f1-e1ec-41f9-a032-\
+0df6129ae581"]
+},
+WindowSize->{1140., 574.8},
+WindowMargins->{{0, Automatic}, {Automatic, 0}},
+FrontEndVersion->"12.3 for Microsoft Windows (64-bit) (July 9, 2021)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"de18c40d-1fcd-4e4f-9508-b02034f51895"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[558, 20, 26367, 614, 2196, "Input",ExpressionUUID->"c90540f1-e1ec-41f9-a032-0df6129ae581"]
+}
+]
+*)
+
